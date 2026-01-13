@@ -1,0 +1,27 @@
+
+sequenceDiagram
+    participant Main as Main Script
+    participant Sub as Subscription Loop
+    participant CM as Cost Mgmt API
+    participant SA as Get-AzStorageAccount
+    participant DK as Get-AzDisk
+
+    Main->>Sub: Select-AzSubscription
+    Sub->>SA: Enumerate storage accounts
+    SA-->>Sub: Storage list
+    Sub->>Sub: Build StorageMap (ResourceId -> SA)
+
+    Sub->>DK: Enumerate managed disks
+    DK-->>Sub: Disk list
+    Sub->>Sub: Build DiskMap (ResourceId -> Disk)
+
+    Sub->>CM: Get-CostByResourceType('Microsoft.Storage/storageAccounts')
+    CM-->>Sub: Cost rows (Storage)
+    Sub->>Sub: Add-CostResults(Storage rows, StorageMap) -> Results
+
+    Sub->>CM: Get-CostByResourceType('Microsoft.Compute/disks')
+    CM-->>Sub: Cost rows (Disks)
+    Sub->>Sub: Add-CostResults(Disk rows, DiskMap) -> Results
+
+    Sub-->>Main: Append to overall Results
+    Main->>Main: Sort & Export CSV
